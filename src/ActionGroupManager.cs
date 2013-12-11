@@ -54,7 +54,7 @@ namespace ActionGroupManager
             UiList.Add("Icon", shortcut);
 
 
-            viewMan.SetVisible(true);
+            viewMan.SetVisible(SettingsManager.Settings.GetValue<bool>(SettingsManager.IsMainWindowVisible));
 
             //TESTING : TO REMOVE
             //TogglePanel panel = new TogglePanel();

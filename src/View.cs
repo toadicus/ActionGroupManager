@@ -75,6 +75,8 @@ namespace ActionGroupManager
         {
             SettingsManager.Settings.SetValue(SettingsManager.MainWindowRect, mainWindowSize);
             SettingsManager.Settings.SetValue(SettingsManager.IsMainWindowVisible, IsVisible());
+
+            SettingsManager.Settings.save();
         }
 
         public override void DoUILogic()
