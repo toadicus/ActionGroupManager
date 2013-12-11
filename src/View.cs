@@ -499,9 +499,8 @@ namespace ActionGroupManager
 #if DEBUG_VERBOSE
             Debug.Log("AGM : Draw Action Group list");
 #endif
-            if (currentSelectedBaseAction.Count == 0)
-                GUI.enabled = false;
-
+            bool selectMode = currentSelectedBaseAction.Count == 0;
+               
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
 
@@ -517,25 +516,35 @@ namespace ActionGroupManager
                 if (list.Count > 0)
                 {
                     buttonTitle += " (" + list.Count + ")";
-                }        
-                
+                }
+
                 //Push the button will replace the actual action group list with all the selected action
                 if(GUILayout.Button(buttonTitle, Style.ButtonToggleStyle))
                 {
-                    foreach (BaseAction ba in list)
-                        ba.RemoveActionToAnActionGroup(ag);
 
-                    foreach (BaseAction ba in currentSelectedBaseAction)
-                        ba.AddActionToAnActionGroup(ag);
+                    if (!selectMode)
+                    {
+                        foreach (BaseAction ba in list)
+                            ba.RemoveActionToAnActionGroup(ag);
 
-                    currentSelectedBaseAction.Clear();
+                        foreach (BaseAction ba in currentSelectedBaseAction)
+                            ba.AddActionToAnActionGroup(ag);
 
-                    currentSelectedPart = null;
+                        currentSelectedBaseAction.Clear();
+
+                        currentSelectedPart = null;
+                        confirmDelete = false;
+                    }
+                    else
+                    {
+                        if (list.Count > 0)
+                        {
+                            currentSelectedBaseAction = list;
+                            allActionGroupSelected = true;
+                            currentSelectedActionGroup = ag;
+                        }
+                    }
                 }
-
-
-                    
-                
 
                 if (ag == KSPActionGroup.Custom02)
                 {
