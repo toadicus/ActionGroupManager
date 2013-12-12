@@ -45,6 +45,10 @@ namespace ActionGroupManager
 
             UiList = new Dictionary<string, UIObject>();
 
+            LightweightUI light = new LightweightUI();
+            light.Initialize();
+            UiList.Add("Light", light);
+
             View viewMan = new View();
             viewMan.Initialize();
             UiList.Add("Main", viewMan);
