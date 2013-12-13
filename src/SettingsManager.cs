@@ -20,6 +20,7 @@ namespace ActionGroupManager
         public static readonly string AutomaticPartCheck = "AutomaticPartCheck";
         public static readonly string FrequencyOfAutomaticUpdate = "FrequencyOfAutomaticUpdate";
         public static readonly string OrderByStage = "OrderByStage";
+        public static readonly string QuietMode = "QuietMode";
 
         static SettingsManager()
         {
