@@ -6,6 +6,12 @@ using UnityEngine;
 
 namespace ActionGroupManager
 {
+    enum ActionGroupType
+    {
+        General,
+        Custom
+    }
+
     abstract class CleanablePartModule : PartModule
     {
 
@@ -34,32 +40,47 @@ namespace ActionGroupManager
 
         public UIActionManager CurrentControler;
 
-        public void SwitchFolder(UIActionManager sender)
+        public void ShowFolder(bool show)
         {
-            bool display;
-            if (IsFolderVisible)
-            {
-                //If folder are already displayed, it may be that the user want to close the actual displayed folder, or clicked on another action.
-                display = false;
-            }
-            else
-            {
-                display = true;
-            }
-
             //We display both folders
             FolderAndActionGroup.ForEach(
                 (e) =>
                 {
                     if (e.IsFolder)
                     {
-                        e.Show(display);
+                        e.Show(show);
                     }
                 }
                 );
-            IsFolderVisible = display;
-            CurrentControler = IsFolderVisible ? sender : null;
 
+            IsFolderVisible = show;
+        }
+
+        public void ShowActionGroup(bool show, ActionGroupType? type = null)
+        {
+            int index, max; 
+
+            if (show)
+            {
+                index = (type.Value == ActionGroupType.General) ? 2 : 9;
+                max = (type.Value == ActionGroupType.General) ? 9 : 19;
+
+                //hide the other folder
+                int i = (type == ActionGroupType.General) ? 1 : 0;
+                FolderAndActionGroup[i].Show(false);
+            }
+            else
+            {
+                index = 2;
+                max = 19;
+            }
+
+            for (; index < max; index++)
+            {
+                FolderAndActionGroup[index].Show(show);
+            }
+
+            IsActionGroupVisible = show;
         }
 
         public override void Terminate()
@@ -220,17 +241,15 @@ namespace ActionGroupManager
         [KSPEvent(name = BASEACTIONSWITCH)]
         void EnableBaseActionEdit()
         {
-            //if the clicked base action is selected
-            //we remove all others actions to show the group action selector.
-                
-            origin.BaseActions.ForEach((mod)=> mod.Show(origin.IsFolderVisible ? true : mod == this));
+            //Display or hide the folder.
+            origin.BaseActions.ForEach((e) => e.Show(origin.IsFolderVisible ? true : e == this));
 
-            if(origin.IsActionGroupVisible)
-            {
-                origin.FolderAndActionGroup.ForEach((e) => { if (!e.IsFolder) e.Show(false); origin.IsActionGroupVisible = false; });
-            }
+            origin.ShowFolder(!origin.IsFolderVisible);
 
-            origin.SwitchFolder(this);
+            if (!origin.IsFolderVisible)
+                origin.ShowActionGroup(false);
+
+            origin.CurrentControler = origin.IsFolderVisible ? this : null;
         }
     }
 
@@ -255,58 +274,18 @@ namespace ActionGroupManager
         [KSPEvent(name = ACTIONGROUPSWITCH)]
         public void EnableActionGroupEdit()
         {
-            //if (!this.IsFolder)
-            //{
-            //    if (!origin.CurrentControler.baseAction.IsInActionGroup(ActionGroup))
-            //        origin.CurrentControler.baseAction.AddActionToAnActionGroup(ActionGroup);
-            //    else
-            //        origin.CurrentControler.baseAction.RemoveActionToAnActionGroup(ActionGroup);
-
-            //    origin.SwitchActionGroup(this);
-            //}
-            //else
-            //{
-            //    if (origin.IsFolderVisible)
-            //    {
-            //        origin.SwitchFolder(null);
-            //    }
-            //    else
-            //    {
-            //        origin.SwitchActionGroup(this);
-            //    }
-            //}
-
             if (this.IsFolder)
             {
                 if (origin.IsActionGroupVisible)
                 {
-                    origin.FolderAndActionGroup.ForEach(
-                        (e) =>
-                        {
-                            e.Show(e.IsFolder);
-                        });
-
-                    origin.IsActionGroupVisible = false;
+                    origin.ShowFolder(true);
+                    origin.ShowActionGroup(false);
                 }
                 else
                 {
-                    origin.FolderAndActionGroup.ForEach(
-                        (e) =>
-                        {
-                            if (e.IsFolder && e != this)
-                                e.Show(false);
-                        });
+                    ActionGroupType type = (this.Events[ACTIONGROUPSWITCH].guiName == "    AGM : General") ? ActionGroupType.General : ActionGroupType.Custom;
 
-                    int index = (this.Events[ACTIONGROUPSWITCH].guiName == "    AGM : General") ? 2 : 9;
-                    int max = (this.Events[ACTIONGROUPSWITCH].guiName == "    AGM : General") ? 9 : 19;
-
-                    for (; index < max; index++)
-                    {
-                        origin.FolderAndActionGroup[index].Show(true);
-                    }
-
-                    origin.IsActionGroupVisible = true;
-                    
+                    origin.ShowActionGroup(true, type);
                 }
             }
             else
@@ -316,21 +295,10 @@ namespace ActionGroupManager
                 else
                     origin.CurrentControler.baseAction.RemoveActionToAnActionGroup(ActionGroup);
 
-                origin.FolderAndActionGroup.ForEach(
-                (e) =>
-                {
-                    e.Show(false);
-                });
 
-                origin.BaseActions.ForEach(
-                (e) =>
-                {
-                    e.Show(true);
-                });
-
-                origin.IsActionGroupVisible = true;
-                origin.IsFolderVisible = false;
-                origin.CurrentControler = null;
+                //Force name update
+                this.Show(false);
+                this.Show(true);
             }
         }
 
@@ -345,6 +313,11 @@ namespace ActionGroupManager
             this.Events[ACTIONGROUPSWITCH].guiActive = vis;
             this.Events[ACTIONGROUPSWITCH].active = vis;
 
+            UpdateName();
+        }
+
+        private void UpdateName()
+        {
             if (!IsFolder)
             {
                 string str;
@@ -385,7 +358,7 @@ namespace ActionGroupManager
             Part root = VesselManager.Instance.ActiveVessel.rootPart;
             if (!root.Modules.Contains("UIRootManager"))
             {
-                //Make sure to make the controler part first in list
+                #region Make sure to make the controler part is first in list
                 if (root.Modules.Contains("UIActionManager"))
                 {
                     List<UIActionManager> actionToRemove = new List<UIActionManager>();
@@ -415,9 +388,10 @@ namespace ActionGroupManager
                     if (actionToRemove.Count > 0)
                         actionToRemove.ForEach((mod) => root.Modules.Remove(mod));
                 }
+                
+                #endregion
 
                 currentRootModule = root.AddModule("UIRootManager") as UIRootManager;
-
             }
             else
             {
@@ -437,11 +411,11 @@ namespace ActionGroupManager
             //Give each part her own set of baseactionmanager
             foreach (Part p in VesselManager.Instance.GetParts())
             {
-                //Case of docked vessel : Remove any other UIRootManager
+                #region Case of docked vessel : Remove any other UIRootManager
                 if (p.Modules.Contains("UIRootManager") && p != root)
                 {
                     UIRootManager rootToRemove = null;
-                    foreach(PartModule mod in p.Modules)
+                    foreach (PartModule mod in p.Modules)
                     {
                         if (mod is UIRootManager)
                         {
@@ -453,6 +427,8 @@ namespace ActionGroupManager
                     if (rootToRemove != null)
                         p.RemoveModule(rootToRemove);
                 }
+                
+                #endregion
 
                 UIPartModuleManager partManager = new UIPartModuleManager();
                 partManager.Part = p;
@@ -461,8 +437,7 @@ namespace ActionGroupManager
 
 
                 List<UIActionManager> actions = new List<UIActionManager>();
-
-                List<UIGroupManager> âctionGroupList = new List<UIGroupManager>();
+                List<UIGroupManager> actionGroupList = new List<UIGroupManager>();
 
 
                 if (!p.Modules.Contains("UIActionManager"))
@@ -482,12 +457,12 @@ namespace ActionGroupManager
                         uig = p.AddModule("UIGroupManager") as UIGroupManager;
                         uig.Initialize(KSPActionGroup.None, partManager, true);
                         uig.Events[UIRootManager.ACTIONGROUPSWITCH].guiName = "    AGM : General";
-                        âctionGroupList.Add(uig);
+                        actionGroupList.Add(uig);
 
                         uig = p.AddModule("UIGroupManager") as UIGroupManager;
                         uig.Initialize(KSPActionGroup.None, partManager, true);
                         uig.Events[UIRootManager.ACTIONGROUPSWITCH].guiName = "    AGM : Custom";
-                        âctionGroupList.Add(uig);
+                        actionGroupList.Add(uig);
 
                         foreach (KSPActionGroup ag in Enum.GetValues(typeof(KSPActionGroup)))
                         {
@@ -496,7 +471,7 @@ namespace ActionGroupManager
                             uig = p.AddModule("UIGroupManager") as UIGroupManager;
                             uig.Initialize(ag, partManager);
                             uig.Events[CleanablePartModule.ACTIONGROUPSWITCH].guiName = "      AGM : " + ag.ToString();
-                            âctionGroupList.Add(uig);
+                            actionGroupList.Add(uig);
                         }
                     }
                     else
@@ -504,7 +479,7 @@ namespace ActionGroupManager
                         foreach (PartModule mod in p.Modules)
                         {
                             if (mod is UIGroupManager)
-                                âctionGroupList.Add(mod as UIGroupManager);
+                                actionGroupList.Add(mod as UIGroupManager);
                         }
                     }
 
@@ -520,7 +495,7 @@ namespace ActionGroupManager
 
 
 
-                partManager.FolderAndActionGroup = âctionGroupList;
+                partManager.FolderAndActionGroup = actionGroupList;
 
                 partManager.BaseActions = actions;
                 currentRootModule.childsModules.Add(partManager);
