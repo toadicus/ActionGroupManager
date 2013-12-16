@@ -431,12 +431,12 @@ namespace ActionGroupManager
                             {
                                 if (allActionGroupSelected)
                                     allActionGroupSelected = false;
-
-                                currentSelectedBaseAction.Add(ba);
+                                if (!currentSelectedBaseAction.Contains(ba))
+                                    currentSelectedBaseAction.Add(ba);
 
                                 foreach (BaseAction addAll in BaseActionFilter.FromParts(currentSelectedPart.symmetryCounterparts))
                                 {
-                                    if (addAll.name == ba.name)
+                                    if (addAll.name == ba.name && !currentSelectedBaseAction.Contains(addAll))
                                         currentSelectedBaseAction.Add(addAll);
                                 }
                                 listIsDirty = true;
