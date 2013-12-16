@@ -393,6 +393,26 @@ namespace ActionGroupManager
                             currentSelectedBaseAction.Remove(ba);
                             listIsDirty = true;
                         }
+
+                        //Remove all symetry parts.
+                        if (currentSelectedPart.symmetryCounterparts.Count > 0)
+                        {
+                            if (GUILayout.Button("<<", Style.ButtonToggleStyle, GUILayout.Width(20)))
+                            {
+                                if (allActionGroupSelected)
+                                    allActionGroupSelected = false;
+
+                                currentSelectedBaseAction.Remove(ba);
+
+                                foreach (BaseAction removeAll in BaseActionFilter.FromParts(currentSelectedPart.symmetryCounterparts))
+                                {
+                                    if (removeAll.name == ba.name && currentSelectedBaseAction.Contains(removeAll))
+                                        currentSelectedBaseAction.Remove(removeAll);
+                                }
+                                listIsDirty = true;
+                            }
+                        }
+
                     }
                     else
                     {
@@ -403,6 +423,26 @@ namespace ActionGroupManager
                             currentSelectedBaseAction.Add(ba);
                             listIsDirty = true;
                         }
+
+                        //Add all symetry parts.
+                        if (currentSelectedPart.symmetryCounterparts.Count > 0)
+                        {
+                            if (GUILayout.Button(">>", Style.ButtonToggleStyle, GUILayout.Width(20)))
+                            {
+                                if (allActionGroupSelected)
+                                    allActionGroupSelected = false;
+
+                                currentSelectedBaseAction.Add(ba);
+
+                                foreach (BaseAction addAll in BaseActionFilter.FromParts(currentSelectedPart.symmetryCounterparts))
+                                {
+                                    if (addAll.name == ba.name)
+                                        currentSelectedBaseAction.Add(addAll);
+                                }
+                                listIsDirty = true;
+                            }
+                        }
+
                     }
 
                     GUILayout.EndHorizontal();
