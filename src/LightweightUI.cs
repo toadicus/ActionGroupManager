@@ -14,7 +14,6 @@ namespace ActionGroupManager
 
     abstract class CleanablePartModule : PartModule
     {
-
         public const string MAINSWITCHON = "EnableEdit";
         public const string MAINSWITCHOFF = "DisableEdit";
         public const string QUIETMODEON = "EnableQuietMode";
@@ -31,7 +30,6 @@ namespace ActionGroupManager
 
     class UIPartModuleManager : CleanablePartModule
     {
-        public Part Part { get; set; }
         public List<UIGroupManager> FolderAndActionGroup { get; set; }
         public List<UIActionManager> BaseActions { get; set; }
         public bool IsFolderVisible = false;
@@ -103,6 +101,9 @@ namespace ActionGroupManager
         {
             FolderAndActionGroup.ForEach((e) => e.Clean());
             BaseActions.ForEach((e) => e.Clean());
+
+            IsFolderVisible = false;
+            IsActionGroupVisible = false;
         }
     }
 
@@ -127,7 +128,6 @@ namespace ActionGroupManager
             Events[MAINSWITCHOFF].guiActive = vis;
             Events[MAINSWITCHOFF].active = vis;
         }
-
 
         public override void Terminate()
         {
@@ -170,12 +170,10 @@ namespace ActionGroupManager
 
         public override void Clean()
         {
-            throw new NotImplementedException();
         }
 
         public override void Terminate()
         {
-            throw new NotImplementedException();
         }
 
         public override void Show(bool vis)
@@ -235,7 +233,7 @@ namespace ActionGroupManager
 
         public override void Terminate()
         {
-            throw new NotImplementedException();
+            this.Clean();
         }
 
         [KSPEvent(name = BASEACTIONSWITCH)]
@@ -295,10 +293,8 @@ namespace ActionGroupManager
                 else
                     origin.CurrentControler.baseAction.RemoveActionToAnActionGroup(ActionGroup);
 
+                UpdateName();
 
-                //Force name update
-                this.Show(false);
-                this.Show(true);
             }
         }
 
@@ -332,7 +328,7 @@ namespace ActionGroupManager
 
         public override void Terminate()
         {
-            throw new NotImplementedException();
+            this.Clean();
         }
     }
 
@@ -354,65 +350,13 @@ namespace ActionGroupManager
 
         void Instance_DatabaseUpdated(object sender, EventArgs e)
         {
-            //the main part in root
-            Part root = VesselManager.Instance.ActiveVessel.rootPart;
-            if (!root.Modules.Contains("UIRootManager"))
-            {
-                #region Make sure to make the controler part is first in list
-                if (root.Modules.Contains("UIActionManager"))
-                {
-                    List<UIActionManager> actionToRemove = new List<UIActionManager>();
-                    foreach (PartModule mod in root.Modules)
-                    {
-                        if (mod is UIActionManager)
-                        {
-                            actionToRemove.Add(mod as UIActionManager);
-                        }
-                    }
-
-                    if (actionToRemove.Count > 0)
-                        actionToRemove.ForEach((mod) => root.Modules.Remove(mod));
-                }
-
-                if (root.Modules.Contains("UIGroupManager"))
-                {
-                    List<UIGroupManager> actionToRemove = new List<UIGroupManager>();
-                    foreach (PartModule mod in root.Modules)
-                    {
-                        if (mod is UIGroupManager)
-                        {
-                            actionToRemove.Add(mod as UIGroupManager);
-                        }
-                    }
-
-                    if (actionToRemove.Count > 0)
-                        actionToRemove.ForEach((mod) => root.Modules.Remove(mod));
-                }
-                
-                #endregion
-
-                currentRootModule = root.AddModule("UIRootManager") as UIRootManager;
-            }
-            else
-            {
-                foreach (PartModule mod in root.Modules)
-                {
-                    if (mod is UIRootManager)
-                        currentRootModule = mod as UIRootManager;
-                }
-            }
-
-
-            //Insert the quiet mode toggle
-            toggleMode = root.AddModule("UIQuietModeToggle") as UIQuietModeToggle;
-            toggleMode.Show(SettingsManager.Settings.GetValue<bool>(SettingsManager.QuietMode, false));
-            toggleMode.Toggled = new Action(ActionGroupManager.Manager.ToggleQuietMode);
-
+            SetupRootModule();
+            
             //Give each part her own set of baseactionmanager
             foreach (Part p in VesselManager.Instance.GetParts())
             {
                 #region Case of docked vessel : Remove any other UIRootManager
-                if (p.Modules.Contains("UIRootManager") && p != root)
+                if (p.Modules.Contains("UIRootManager") && p != VesselManager.Instance.ActiveVessel.rootPart)
                 {
                     UIRootManager rootToRemove = null;
                     foreach (PartModule mod in p.Modules)
@@ -431,7 +375,6 @@ namespace ActionGroupManager
                 #endregion
 
                 UIPartModuleManager partManager = new UIPartModuleManager();
-                partManager.Part = p;
                 partManager.IsActionGroupVisible = false;
                 partManager.IsFolderVisible = false;
 
@@ -493,8 +436,7 @@ namespace ActionGroupManager
                     }
                 }
 
-
-
+                partManager.part = p;
                 partManager.FolderAndActionGroup = actionGroupList;
 
                 partManager.BaseActions = actions;
@@ -502,6 +444,65 @@ namespace ActionGroupManager
 
             }
 
+        }
+
+        private void SetupRootModule()
+        {
+            //the main part in root
+            Part root = VesselManager.Instance.ActiveVessel.rootPart;
+            if (!root.Modules.Contains("UIRootManager"))
+            {
+                #region Make sure to make the controler part is first in list
+                if (root.Modules.Contains("UIActionManager"))
+                {
+                    List<UIActionManager> actionToRemove = new List<UIActionManager>();
+                    foreach (PartModule mod in root.Modules)
+                    {
+                        if (mod is UIActionManager)
+                        {
+                            actionToRemove.Add(mod as UIActionManager);
+                        }
+                    }
+
+                    if (actionToRemove.Count > 0)
+                        actionToRemove.ForEach((mod) => root.Modules.Remove(mod));
+                }
+
+                if (root.Modules.Contains("UIGroupManager"))
+                {
+                    List<UIGroupManager> actionToRemove = new List<UIGroupManager>();
+                    foreach (PartModule mod in root.Modules)
+                    {
+                        if (mod is UIGroupManager)
+                        {
+                            actionToRemove.Add(mod as UIGroupManager);
+                        }
+                    }
+
+                    if (actionToRemove.Count > 0)
+                        actionToRemove.ForEach((mod) => root.Modules.Remove(mod));
+                }
+
+                #endregion
+
+                currentRootModule = root.AddModule("UIRootManager") as UIRootManager;
+            }
+            else
+            {
+                foreach (PartModule mod in root.Modules)
+                {
+                    if (mod is UIRootManager)
+                        currentRootModule = mod as UIRootManager;
+                }
+            }
+
+            if (!root.Modules.Contains("UIQuietModeToggle"))
+            {
+                //Insert the quiet mode toggle
+                toggleMode = root.AddModule("UIQuietModeToggle") as UIQuietModeToggle;
+                toggleMode.Show(SettingsManager.Settings.GetValue<bool>(SettingsManager.QuietMode, false));
+                toggleMode.Toggled = new Action(ActionGroupManager.Manager.ToggleQuietMode);
+            }
         }
 
         public override void Terminate()
@@ -513,12 +514,10 @@ namespace ActionGroupManager
 
         public override void DoUILogic()
         {
-            throw new NotImplementedException();
         }
 
         public override void Reset()
         {
-            throw new NotImplementedException();
         }
         #endregion
 
