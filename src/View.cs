@@ -124,9 +124,9 @@ namespace ActionGroupManager
             if (listIsDirty)
                 SortCurrentSelectedBaseAction();
 
-            if (GUI.Button(new Rect(mainWindowSize.width - 45, 4, 20, 20), "S", Style.CloseButtonStyle))
+            if (GUI.Button(new Rect(mainWindowSize.width - 45, 4, 20, 20), new GUIContent("S", "Show settings."), Style.CloseButtonStyle))
                 ActionGroupManager.Manager.ShowSettings = !ActionGroupManager.Manager.ShowSettings;
-            if (GUI.Button(new Rect(mainWindowSize.width - 24, 4, 20, 20), "X", Style.CloseButtonStyle))
+            if (GUI.Button(new Rect(mainWindowSize.width - 24, 4, 20, 20), new GUIContent("X", "Close the window."), Style.CloseButtonStyle))
             {
                 SetVisible(!IsVisible());
             }
@@ -170,7 +170,7 @@ namespace ActionGroupManager
                     str += " (" + dic[pc] + ")";
                 }
 
-                bool result = GUILayout.Toggle(initial, str, Style.ButtonToggleStyle);
+                bool result = GUILayout.Toggle(initial, new GUIContent(str, "Show only " + pc.ToString() + " parts."), Style.ButtonToggleStyle);
                 if (initial != result)
                 {
                     if (!result)
@@ -187,17 +187,19 @@ namespace ActionGroupManager
             else if (currentView == ViewType.ActionGroup)
                 DoMyActionGroupView();
 
-
             GUILayout.BeginHorizontal();
             string newString = GUILayout.TextField(partFilter.CurrentSearch);
             if (partFilter.CurrentSearch != newString)
                 OnUpdate(FilterModification.Search, newString);
 
             GUILayout.Space(5);
-            if (GUILayout.Button("X", Style.ButtonToggleStyle, GUILayout.Width(Style.ButtonToggleStyle.fixedHeight)))
+            if (GUILayout.Button(new GUIContent("X", "Remove all text from the input box."), Style.ButtonToggleStyle, GUILayout.Width(Style.ButtonToggleStyle.fixedHeight)))
                 OnUpdate(FilterModification.Search, string.Empty);
 
             GUILayout.EndHorizontal();
+
+            GUILayout.Label(GUI.tooltip, GUILayout.Height(15));
+
             GUI.DragWindow();
         }
 
@@ -298,7 +300,7 @@ namespace ActionGroupManager
                 GUILayout.BeginHorizontal();
 
                 bool initial = highlighter.Contains(p);
-                bool final = GUILayout.Toggle(initial, "!", Style.ButtonToggleStyle, GUILayout.Width(20));
+                bool final = GUILayout.Toggle(initial, new GUIContent("!", "Highlight the part."), Style.ButtonToggleStyle, GUILayout.Width(20));
                 if (final != initial)
                     highlighter.Switch(p);
 
@@ -320,7 +322,7 @@ namespace ActionGroupManager
                     {
                         if (ag == KSPActionGroup.None)
                             continue;
-                        GUIContent content = new GUIContent(ag.ToShortString(), ag.ToString());
+                        GUIContent content = new GUIContent(ag.ToShortString(), "Part has an action linked to action group " + ag.ToString());
 
                         if (p != currentSelectedPart)
                         {
@@ -386,7 +388,7 @@ namespace ActionGroupManager
 
                     if (currentSelectedBaseAction.Contains(ba))
                     {
-                        if (GUILayout.Button("<", Style.ButtonToggleStyle, GUILayout.Width(20)))
+                        if (GUILayout.Button(new GUIContent("<", "Remove from selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
                         {
                             if (allActionGroupSelected)
                                 allActionGroupSelected = false;
@@ -397,7 +399,7 @@ namespace ActionGroupManager
                         //Remove all symetry parts.
                         if (currentSelectedPart.symmetryCounterparts.Count > 0)
                         {
-                            if (GUILayout.Button("<<", Style.ButtonToggleStyle, GUILayout.Width(20)))
+                            if (GUILayout.Button(new GUIContent("<<", "Remove part and all symmetry linked parts from selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
                             {
                                 if (allActionGroupSelected)
                                     allActionGroupSelected = false;
@@ -416,7 +418,7 @@ namespace ActionGroupManager
                     }
                     else
                     {
-                        if (GUILayout.Button(">", Style.ButtonToggleStyle, GUILayout.Width(20)))
+                        if (GUILayout.Button(new GUIContent(">", "Add to selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
                         {
                             if (allActionGroupSelected)
                                 allActionGroupSelected = false;
@@ -427,7 +429,7 @@ namespace ActionGroupManager
                         //Add all symetry parts.
                         if (currentSelectedPart.symmetryCounterparts.Count > 0)
                         {
-                            if (GUILayout.Button(">>", Style.ButtonToggleStyle, GUILayout.Width(20)))
+                            if (GUILayout.Button(new GUIContent(">>", "Add part and all symmetry linked parts to selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
                             {
                                 if (allActionGroupSelected)
                                     allActionGroupSelected = false;
@@ -497,7 +499,7 @@ namespace ActionGroupManager
                 else
                     GUILayout.FlexibleSpace();
 
-                if (GUILayout.Button("X", Style.ButtonToggleStyle, GUILayout.Width(Style.ButtonToggleStyle.fixedHeight)))
+                if (GUILayout.Button(new GUIContent ("X", "Clear the selection."), Style.ButtonToggleStyle, GUILayout.Width(Style.ButtonToggleStyle.fixedHeight)))
                 {
                     currentSelectedBaseAction.Clear();
                 }
@@ -506,24 +508,49 @@ namespace ActionGroupManager
             foreach (BaseAction pa in currentSelectedBaseAction)
             {
                 
-
-
                 if (currentDrawn != pa.listParent.part)
                 {
+                    GUILayout.BeginHorizontal();
                     GUILayout.Label(pa.listParent.part.partInfo.title, Style.ButtonToggleStyle);
                     currentDrawn = pa.listParent.part;
+
+                    bool initial = highlighter.Contains(pa.listParent.part);
+                    bool final = GUILayout.Toggle(initial, new GUIContent("!", "Highlight the part."), Style.ButtonToggleStyle, GUILayout.Width(20));
+                    if (final != initial)
+                        highlighter.Switch(pa.listParent.part);
+
+                    GUILayout.EndHorizontal();
                 }
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("<", Style.ButtonToggleStyle, GUILayout.Width(20)))
+                if (GUILayout.Button(new GUIContent("<", "Remove from selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
                 {
                     currentSelectedBaseAction.Remove(pa);
                     if (allActionGroupSelected)
                         allActionGroupSelected = false;
-
                 }
 
+                if (pa.listParent.part.symmetryCounterparts.Count > 0)
+                {
+                    if (GUILayout.Button(new GUIContent("<<", "Remove part and all symmetry linked parts from selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
+                    {
+                        if (allActionGroupSelected)
+                            allActionGroupSelected = false;
+
+                        currentSelectedBaseAction.Remove(pa);
+
+                        foreach (BaseAction removeAll in BaseActionFilter.FromParts(pa.listParent.part.symmetryCounterparts))
+                        {
+                            if (removeAll.name == pa.name && currentSelectedBaseAction.Contains(removeAll))
+                                currentSelectedBaseAction.Remove(removeAll);
+                        }
+                        listIsDirty = true;
+                    }
+                }
+
+
                 GUILayout.Label(pa.guiName, Style.LabelExpandStyle);
-                if (GUILayout.Button(new GUIContent("F", "Find Action"), Style.ButtonToggleStyle, GUILayout.Width(20)))
+
+                if (GUILayout.Button(new GUIContent("F", "Find action in parts list."), Style.ButtonToggleStyle, GUILayout.Width(20)))
                 {
                     currentSelectedPart = pa.listParent.part;
                 }
@@ -558,8 +585,20 @@ namespace ActionGroupManager
                     buttonTitle += " (" + list.Count + ")";
                 }
 
+                string tooltip;
+                if (selectMode)
+                    if (list.Count > 0)
+                        tooltip = "Put all the parts linked to " + ag.ToString() + " in the selection.";
+                    else
+                        tooltip = string.Empty;
+                else
+                    tooltip = "Link all parts selected to " + ag.ToString();
+
+                if (selectMode && list.Count == 0)
+                    GUI.enabled = false;
+
                 //Push the button will replace the actual action group list with all the selected action
-                if(GUILayout.Button(buttonTitle, Style.ButtonToggleStyle))
+                if(GUILayout.Button(new GUIContent(buttonTitle, tooltip), Style.ButtonToggleStyle))
                 {
 
                     if (!selectMode)
@@ -585,6 +624,8 @@ namespace ActionGroupManager
                         }
                     }
                 }
+
+                GUI.enabled = true;
 
                 if (ag == KSPActionGroup.Custom02)
                 {
