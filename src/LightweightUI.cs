@@ -92,8 +92,7 @@ namespace ActionGroupManager
             BaseActions.ForEach(
                 (e) =>
                 {
-                    e.Events[BASEACTIONSWITCH].guiActive = vis;
-                    e.Events[BASEACTIONSWITCH].active = vis;
+                    e.Show(vis);
                 });
         }
 
