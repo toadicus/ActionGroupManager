@@ -49,19 +49,17 @@ namespace ActionGroupManager
             light.Initialize();
             UiList.Add("Light", light);
 
-            if (!SettingsManager.Settings.GetValue<bool>(SettingsManager.QuietMode, false))
-            {
-                View viewMan = new View();
-                viewMan.Initialize();
-                UiList.Add("Main", viewMan);
+            View viewMan = new View();
+            viewMan.Initialize();
+            UiList.Add("Main", viewMan);
 
-                ShortcutNew shortcut = new ShortcutNew();
-                shortcut.Initialize(viewMan);
-                UiList.Add("Icon", shortcut);
+            ShortcutNew shortcut = new ShortcutNew();
+            shortcut.Initialize(viewMan);
+            UiList.Add("Icon", shortcut);
 
 
-                viewMan.SetVisible(SettingsManager.Settings.GetValue<bool>(SettingsManager.IsMainWindowVisible));
-            }
+            viewMan.SetVisible(SettingsManager.Settings.GetValue<bool>(SettingsManager.IsMainWindowVisible));
+
             //TESTING : TO REMOVE
             //TogglePanel panel = new TogglePanel();
             //panel.Initialize();

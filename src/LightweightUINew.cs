@@ -106,11 +106,6 @@ namespace ActionGroupManager
 
     }
 
-    class UISilentModeToggle
-    {
-
-    }
-
     class UIPartManager
     {
         public Part Part { get; set; }
