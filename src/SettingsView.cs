@@ -3,6 +3,7 @@
 //terms of the Do What The Fuck You Want To Public License, Version 2,
 //as published by Sam Hocevar. See the COPYING file for more details.
 
+using System.Reflection;
 using UnityEngine;
 
 namespace ActionGroupManager
@@ -31,6 +32,7 @@ namespace ActionGroupManager
                 return;
             }
             GUILayout.BeginVertical();
+            GUILayout.Label("AGM version : " + Assembly.GetAssembly(typeof(ActionGroupManager)).GetName().Version.ToString(), Style.LabelExpandStyle);
             bool initial = SettingsManager.Settings.GetValue<bool>(SettingsManager.OrderByStage);
             bool final = GUILayout.Toggle(initial, "Order by stage", Style.ButtonToggleStyle);
             if (final != initial)
