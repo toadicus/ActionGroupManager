@@ -45,7 +45,7 @@ namespace ActionGroupManager
 
             UiList = new Dictionary<string, UIObject>();
 
-            LightweightUI light = new LightweightUI();
+            LightweightUINew light = new LightweightUINew();
             light.Initialize();
             UiList.Add("Light", light);
 
