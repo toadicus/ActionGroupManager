@@ -45,6 +45,10 @@ namespace ActionGroupManager
 
             UiList = new Dictionary<string, UIObject>();
 
+            LightweightUINew light = new LightweightUINew();
+            light.Initialize();
+            UiList.Add("Light", light);
+
             View viewMan = new View();
             viewMan.Initialize();
             UiList.Add("Main", viewMan);
@@ -91,9 +95,48 @@ namespace ActionGroupManager
             }
         }
 
+        public void ToggleQuietMode()
+        {
+            bool b = SettingsManager.Settings.GetValue<bool>(SettingsManager.QuietMode, false);
+            if(!b)
+            {
+                UIObject o;
+                if (UiList.TryGetValue("Main", out o))
+                {
+                    o.Terminate();
+                    o.SetVisible(false);
+                    UiList.Remove("Main");
+                }
+                o=null;
+
+                if (UiList.TryGetValue("Icon", out o))
+                {
+                    o.Terminate();
+                    UiList.Remove("Icon");
+                }
+            }
+            else
+            {
+                View viewMan = new View();
+                viewMan.Initialize();
+                UiList.Add("Main", viewMan);
+
+                ShortcutNew shortcut = new ShortcutNew();
+                shortcut.Initialize(viewMan);
+                UiList.Add("Icon", shortcut);
+
+
+                viewMan.SetVisible(SettingsManager.Settings.GetValue<bool>(SettingsManager.IsMainWindowVisible));
+            }
+            SettingsManager.Settings.SetValue(SettingsManager.QuietMode, !b);
+
+        }
+
         public void UpdateIcon(bool val)
         {
-            (UiList["Icon"] as ShortcutNew).SwitchTexture(val);
+            UIObject o;
+            if (UiList.TryGetValue("Icon", out o))
+                (o as ShortcutNew).SwitchTexture(val);
         }
 
         void OnDestroy()

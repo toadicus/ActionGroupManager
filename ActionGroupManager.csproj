@@ -65,6 +65,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="src\LightweightUINew.cs" />
     <Compile Include="src\BaseActionManager.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
