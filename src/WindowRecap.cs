@@ -29,6 +29,8 @@ namespace ActionGroupManager
 
         public override void DoUILogic()
         {
+            GUI.skin = HighLogic.Skin;
+
             recapWindowSize = GUILayout.Window(this.GetHashCode(), recapWindowSize, new GUI.WindowFunction(DoMyRecapView), "AGM : Recap", HighLogic.Skin.window, GUILayout.Width(200));
         }
 
