@@ -124,12 +124,13 @@ namespace ActionGroupManager
             if (listIsDirty)
                 SortCurrentSelectedBaseAction();
 
+
+            if (GUI.Button(new Rect(mainWindowSize.width - 66, 4, 20, 20), new GUIContent("R", "Show recap."), Style.CloseButtonStyle))
+                ActionGroupManager.Manager.ShowRecapWindow = !ActionGroupManager.Manager.ShowRecapWindow;
             if (GUI.Button(new Rect(mainWindowSize.width - 45, 4, 20, 20), new GUIContent("S", "Show settings."), Style.CloseButtonStyle))
                 ActionGroupManager.Manager.ShowSettings = !ActionGroupManager.Manager.ShowSettings;
             if (GUI.Button(new Rect(mainWindowSize.width - 24, 4, 20, 20), new GUIContent("X", "Close the window."), Style.CloseButtonStyle))
-            {
                 SetVisible(!IsVisible());
-            }
 
 //            GUILayout.BeginHorizontal();
 //            foreach(ViewType vt in Enum.GetValues(typeof(ViewType)))
@@ -170,7 +171,10 @@ namespace ActionGroupManager
                     str += " (" + dic[pc] + ")";
                 }
 
+                GUI.enabled = (dic[pc] > 0);
                 bool result = GUILayout.Toggle(initial, new GUIContent(str, "Show only " + pc.ToString() + " parts."), Style.ButtonToggleStyle);
+                GUI.enabled = true;
+
                 if (initial != result)
                 {
                     if (!result)
@@ -178,6 +182,7 @@ namespace ActionGroupManager
                     else
                         OnUpdate(FilterModification.Category, pc);
                 }
+
             }
             GUILayout.EndHorizontal();
             #endregion

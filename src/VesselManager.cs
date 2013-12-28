@@ -57,7 +57,6 @@ namespace ActionGroupManager
             GameEvents.onVesselChange.Remove(new EventData<Vessel>.OnEvent(this.OnVesselModified));
             GameEvents.onUndock.Remove(new EventData<EventReport>.OnEvent(this.OnUndock));
             GameEvents.onPartCouple.Remove(new EventData<GameEvents.FromToAction<Part, Part>>.OnEvent(this.OnPartCouple));
-
         }
 
         public static void Terminate()
@@ -125,21 +124,6 @@ namespace ActionGroupManager
             GameEvents.onVesselChange.Add(new EventData<Vessel>.OnEvent(this.OnVesselModified));
             GameEvents.onUndock.Add(new EventData<EventReport>.OnEvent(this.OnUndock));
             GameEvents.onPartCouple.Add(new EventData<GameEvents.FromToAction<Part, Part>>.OnEvent(this.OnPartCouple));
-        }
-
-        public void Update(bool force = false)
-        {
-#if DEBUG
-            Debug.Log("Active vessel have " + ActiveVessel.parts.Count + " parts.");
-#endif
-            if (ActiveVessel.Parts.Count != nonSortedPartList.Count || force || ActiveVessel != FlightGlobals.ActiveVessel)
-            {
-#if DEBUG
-                Debug.Log("AGM : Vessel Parts Catalog need Updating ...");
-#endif          
-                SetActiveVessel();
-                RebuildPartDatabase();
-            }
         }
 
         void BuildActionGroupList()
