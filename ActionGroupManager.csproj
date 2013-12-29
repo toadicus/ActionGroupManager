@@ -106,7 +106,6 @@
     <Compile Include="src\WindowRecap.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <None Include="VERSION" />
   </ItemGroup>
   <ItemGroup>
     <None Include="COPYING.txt">
