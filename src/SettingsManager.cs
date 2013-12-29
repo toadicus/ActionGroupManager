@@ -23,6 +23,7 @@ namespace ActionGroupManager
         public static readonly string QuietMode = "QuietMode";
         public static readonly string RecapWindocRect = "RecapWindowRect";
         public static readonly string IsRecapWindowVisible = "IsRecapWindowVisible";
+        public static readonly string OrderByModules = "OrderByModules";
 
 
         static SettingsManager()

@@ -22,12 +22,21 @@ namespace ActionGroupManager
 
             foreach (PartModule pm in part.Modules)
             {
-                foreach (BaseAction ba in pm.Actions)
-                {
-                    ret.Add(ba);
-                }
-
+                ret.AddRange(FromModule(pm));
             }
+
+            return ret;
+        }
+
+        public static IEnumerable<BaseAction> FromModule(PartModule module)
+        {
+            List<BaseAction> ret = new List<BaseAction>();
+
+            foreach (BaseAction ba in module.Actions)
+            {
+                ret.Add(ba);
+            }
+
             return ret;
         }
 
@@ -36,17 +45,7 @@ namespace ActionGroupManager
             List<BaseAction> ret = new List<BaseAction>();
             foreach (Part p in parts)
             {
-                foreach (BaseAction ba in p.Actions)
-                    ret.Add(ba);
-
-                foreach (PartModule pm in p.Modules)
-                {
-                    foreach (BaseAction ba in pm.Actions)
-                    {
-                        ret.Add(ba);
-                    }
-
-                }
+                ret.AddRange(FromParts(p));
             }
             return ret;
         }

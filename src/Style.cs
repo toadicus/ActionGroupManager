@@ -22,6 +22,7 @@ namespace ActionGroupManager
         public static GUIStyle ButtonToggleRedStyle;
 
         public static GUIStyle LabelExpandStyle;
+        public static GUIStyle LabelRedExpandStyle;
 
         static bool UseKSPSkin = false;
 
@@ -76,6 +77,16 @@ namespace ActionGroupManager
             LabelExpandStyle.alignment = TextAnchor.MiddleCenter;
             LabelExpandStyle.stretchWidth = true;
 
+            LabelRedExpandStyle = new GUIStyle(LabelExpandStyle);
+            LabelRedExpandStyle.normal.textColor = Color.red;
+            LabelRedExpandStyle.active.textColor = Color.red;
+            LabelRedExpandStyle.focused.textColor = Color.red;
+            LabelRedExpandStyle.hover.textColor = Color.red;
+
+            LabelRedExpandStyle.onNormal.textColor = Color.red;
+            LabelRedExpandStyle.onActive.textColor = Color.red;
+            LabelRedExpandStyle.onFocused.textColor = Color.red;
+            LabelRedExpandStyle.onHover.textColor = Color.red;
         }
     }
 }
