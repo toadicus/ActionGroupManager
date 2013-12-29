@@ -119,6 +119,7 @@
     <Content Include="ToolbarIcons\iconONNEW.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <None Include="VERSION" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
