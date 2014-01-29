@@ -18,13 +18,13 @@ namespace ActionGroupManager
 
         public override void Initialize(params object[] list)
         {
-            recapWindowSize = SettingsManager.Settings.GetValue<Rect>(SettingsManager.RecapWindocRect, new Rect(200, 200, 400, 500));
+            recapWindowSize = SettingsManager.Instance.GetValue<Rect>(SettingsManager.RecapWindocRect, new Rect(200, 200, 400, 500));
         }
 
         public override void Terminate()
         {
-            SettingsManager.Settings.SetValue(SettingsManager.RecapWindocRect, recapWindowSize);
-            SettingsManager.Settings.SetValue(SettingsManager.IsRecapWindowVisible, IsVisible());
+            SettingsManager.Instance.SetValue(SettingsManager.RecapWindocRect, recapWindowSize);
+            SettingsManager.Instance.SetValue(SettingsManager.IsRecapWindowVisible, IsVisible());
         }
 
         public override void DoUILogic()

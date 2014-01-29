@@ -51,7 +51,7 @@ namespace ActionGroupManager
         #region override Base class
         public override void Initialize(params object[] list)
         {
-            mainWindowSize = SettingsManager.Settings.GetValue<Rect>(SettingsManager.MainWindowRect, new Rect(200, 200, 500, 400));
+            mainWindowSize = SettingsManager.Instance.GetValue<Rect>(SettingsManager.MainWindowRect, new Rect(200, 200, 500, 400));
             mainWindowSize.width = mainWindowSize.width > 500 ? 500 : mainWindowSize.width;
             mainWindowSize.height = mainWindowSize.height > 400 ? 400 : mainWindowSize.height;
 
@@ -65,10 +65,10 @@ namespace ActionGroupManager
 
         public override void Terminate()
         {
-            SettingsManager.Settings.SetValue(SettingsManager.MainWindowRect, mainWindowSize);
-            SettingsManager.Settings.SetValue(SettingsManager.IsMainWindowVisible, IsVisible());
+            SettingsManager.Instance.SetValue(SettingsManager.MainWindowRect, mainWindowSize);
+            SettingsManager.Instance.SetValue(SettingsManager.IsMainWindowVisible, IsVisible());
 
-            SettingsManager.Settings.save();
+            SettingsManager.Instance.save();
         }
 
         public override void DoUILogic()
@@ -116,13 +116,14 @@ namespace ActionGroupManager
             if (listIsDirty)
                 SortCurrentSelectedBaseAction();
 
-
+            #region Draw Top right buttons
             if (GUI.Button(new Rect(mainWindowSize.width - 66, 4, 20, 20), new GUIContent("R", "Show recap."), Style.CloseButtonStyle))
                 ActionGroupManager.Manager.ShowRecapWindow = !ActionGroupManager.Manager.ShowRecapWindow;
             if (GUI.Button(new Rect(mainWindowSize.width - 45, 4, 20, 20), new GUIContent("S", "Show settings."), Style.CloseButtonStyle))
                 ActionGroupManager.Manager.ShowSettings = !ActionGroupManager.Manager.ShowSettings;
             if (GUI.Button(new Rect(mainWindowSize.width - 24, 4, 20, 20), new GUIContent("X", "Close the window."), Style.CloseButtonStyle))
                 SetVisible(!IsVisible());
+            #endregion
 
             #region Categories Draw
 #if DEBUG_VERBOSE
@@ -161,6 +162,8 @@ namespace ActionGroupManager
 
             DoMyPartView();
 
+            #region Draw text search
+
             GUILayout.BeginHorizontal();
             string newString = GUILayout.TextField(partFilter.CurrentSearch);
             if (partFilter.CurrentSearch != newString)
@@ -170,8 +173,12 @@ namespace ActionGroupManager
             if (GUILayout.Button(new GUIContent("X", "Remove all text from the input box."), Style.ButtonToggleStyle, GUILayout.Width(Style.ButtonToggleStyle.fixedHeight)))
                 OnUpdate(FilterModification.Search, string.Empty);
 
+            
+            #endregion            
+
             GUILayout.EndHorizontal();
 
+            //The label to display all tooltips
             GUILayout.Label(GUI.tooltip, GUILayout.Height(15));
 
             GUI.DragWindow();
@@ -192,16 +199,19 @@ namespace ActionGroupManager
             GUILayout.BeginHorizontal();
 
             mainWindowScroll = GUILayout.BeginScrollView(mainWindowScroll, Style.ScrollViewStyle, GUILayout.Width(300));
+
             GUILayout.BeginVertical();
             
             DrawAllParts();
 
             GUILayout.EndVertical();
+
             GUILayout.EndScrollView();
             
             GUILayout.Space(10);
 
             secondaryWindowScroll = GUILayout.BeginScrollView(secondaryWindowScroll, Style.ScrollViewStyle);
+
             GUILayout.BeginVertical();
 
             DrawSelectedAction();
@@ -228,7 +238,7 @@ namespace ActionGroupManager
 #if DEBUG_VERBOSE
             Debug.Log("AGM : Draw All parts");
 #endif
-            if (!SettingsManager.Settings.GetValue<bool>(SettingsManager.OrderByStage))
+            if (!SettingsManager.Instance.GetValue<bool>(SettingsManager.OrderByStage))
             {
                 InternalDrawParts(partFilter.GetCurrentParts());
             }
@@ -276,10 +286,12 @@ namespace ActionGroupManager
                 List<KSPActionGroup> currentAG = partFilter.GetActionGroupAttachedToPart(p).ToList();
                 GUILayout.BeginHorizontal();
 
+                #region Highlight button
                 bool initial = highlighter.Contains(p);
                 bool final = GUILayout.Toggle(initial, new GUIContent("!", "Highlight the part."), Style.ButtonToggleStyle, GUILayout.Width(20));
                 if (final != initial)
-                    highlighter.Switch(p);
+                    highlighter.Switch(p); 
+                #endregion
 
                 initial = p == currentSelectedPart;
                 string str = p.partInfo.title;
@@ -292,6 +304,7 @@ namespace ActionGroupManager
                         currentSelectedModule = null;
                 }
 
+                #region Action group buttons
                 if (currentAG.Count > 0)
                 {
                     foreach (KSPActionGroup ag in currentAG)
@@ -312,6 +325,8 @@ namespace ActionGroupManager
                     }
 
                 }
+                
+                #endregion
 
                 GUILayout.EndHorizontal();
 
@@ -337,7 +352,8 @@ namespace ActionGroupManager
 
                 foreach (PartModule mod in currentSelectedPart.Modules)
                 {
-                    if (SettingsManager.Settings.GetValue<bool>(SettingsManager.OrderByModules, false) && BaseActionFilter.FromModule(mod).Count() > 0)
+                    #region If sort by modules activated, insert a button by module
+                    if (SettingsManager.Instance.GetValue<bool>(SettingsManager.OrderByModules, false) && BaseActionFilter.FromModule(mod).Count() > 0)
                     {
                         GUILayout.BeginHorizontal();
 
@@ -349,9 +365,10 @@ namespace ActionGroupManager
                             currentSelectedModule = final ? mod : null;
 
                         GUILayout.EndHorizontal();
-                    }
+                    } 
+                    #endregion
 
-                    if (mod == currentSelectedModule || !SettingsManager.Settings.GetValue<bool>(SettingsManager.OrderByModules, false))
+                    if (mod == currentSelectedModule || !SettingsManager.Instance.GetValue<bool>(SettingsManager.OrderByModules, false))
                     {
                         foreach (BaseAction ba in BaseActionFilter.FromModule(mod))
                         {
@@ -363,6 +380,7 @@ namespace ActionGroupManager
 
                             GUILayout.FlexibleSpace();
 
+                            #region Action groups buttons
                             if (BaseActionFilter.GetActionGroupList(ba).Count() > 0)
                             {
                                 foreach (KSPActionGroup ag in BaseActionFilter.GetActionGroupList(ba))
@@ -378,7 +396,10 @@ namespace ActionGroupManager
                                 }
                             }
 
+                            
+                            #endregion
 
+                            #region Add or remove buttons
                             if (currentSelectedBaseAction.Contains(ba))
                             {
                                 if (GUILayout.Button(new GUIContent("<", "Remove from selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
@@ -439,6 +460,8 @@ namespace ActionGroupManager
                                 }
 
                             }
+                            
+                            #endregion
 
                             GUILayout.EndHorizontal();
 
@@ -462,6 +485,7 @@ namespace ActionGroupManager
                 GUILayout.Space(HighLogic.Skin.verticalScrollbar.margin.left);
                 GUILayout.BeginHorizontal();
 
+                #region Remove all from action group button
                 if (allActionGroupSelected)
                 {
                     string str = confirmDelete ? "Delete all actions in " + currentSelectedActionGroup.ToString() + " OK ?" : "Remove all from group " + currentSelectedActionGroup.ToShortString();
@@ -493,6 +517,8 @@ namespace ActionGroupManager
                 }
                 else
                     GUILayout.FlexibleSpace();
+                
+                #endregion
 
                 if (GUILayout.Button(new GUIContent ("X", "Clear the selection."), Style.ButtonToggleStyle, GUILayout.Width(Style.ButtonToggleStyle.fixedHeight)))
                 {
@@ -517,6 +543,8 @@ namespace ActionGroupManager
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.BeginHorizontal();
+
+                #region Remove buttons
                 if (GUILayout.Button(new GUIContent("<", "Remove from selection."), Style.ButtonToggleStyle, GUILayout.Width(20)))
                 {
                     currentSelectedBaseAction.Remove(pa);
@@ -541,7 +569,8 @@ namespace ActionGroupManager
                         listIsDirty = true;
                     }
                 }
-
+                
+                #endregion
 
                 GUILayout.Label(pa.guiName, Style.LabelExpandStyle);
 

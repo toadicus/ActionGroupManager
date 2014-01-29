@@ -59,9 +59,9 @@ namespace ActionGroupManager
             shortcut.Initialize(viewMan);
             UiList.Add("Icon", shortcut);
 
-            viewMan.SetVisible(SettingsManager.Settings.GetValue<bool>(SettingsManager.IsMainWindowVisible));
+            viewMan.SetVisible(SettingsManager.Instance.GetValue<bool>(SettingsManager.IsMainWindowVisible));
 
-            ShowRecapWindow = SettingsManager.Settings.GetValue<bool>(SettingsManager.IsRecapWindowVisible, false);
+            ShowRecapWindow = SettingsManager.Instance.GetValue<bool>(SettingsManager.IsRecapWindowVisible, false);
 
 #if DEBUG
             Debug.Log("AGM : Action Group Manager has started.");
@@ -113,7 +113,7 @@ namespace ActionGroupManager
             foreach (KeyValuePair<string, UIObject> ui in UiList)
                 ui.Value.Terminate();
             //Save settings to disk
-            SettingsManager.Settings.save();
+            SettingsManager.Instance.save();
 
             VesselManager.Terminate();
 

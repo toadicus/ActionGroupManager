@@ -11,7 +11,7 @@ namespace ActionGroupManager
     //Wrapper for PluginConfiguration
     class SettingsManager
     {
-        public static PluginConfiguration Settings { get; private set; }
+        public static PluginConfiguration Instance { get; private set; }
 
         public static readonly string IsMainWindowVisible = "IsMainWindowVisible";
         public static readonly string IsIconLocked = "IsIconLocked";
@@ -24,17 +24,19 @@ namespace ActionGroupManager
         public static readonly string RecapWindocRect = "RecapWindowRect";
         public static readonly string IsRecapWindowVisible = "IsRecapWindowVisible";
         public static readonly string OrderByModules = "OrderByModules";
+        public static readonly string LastCheckedVersion = "LastCheckedVersion";
+        public static readonly string LastCheckDate = "LastCheckDate";
 
 
         static SettingsManager()
         {
-            Settings = PluginConfiguration.CreateForType<ActionGroupManager>();
-            Settings.load();
+            Instance = PluginConfiguration.CreateForType<ActionGroupManager>();
+            Instance.load();
         }
 
         static void Save()
         {
-            Settings.save();
+            Instance.save();
         }
 
     }

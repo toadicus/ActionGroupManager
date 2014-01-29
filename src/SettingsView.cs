@@ -3,6 +3,7 @@
 //terms of the Do What The Fuck You Want To Public License, Version 2,
 //as published by Sam Hocevar. See the COPYING file for more details.
 
+using System;
 using System.Reflection;
 using UnityEngine;
 
@@ -36,42 +37,66 @@ namespace ActionGroupManager
             }
             GUILayout.BeginVertical();
 
-            GUILayout.Label("AGM Current version : " + Assembly.GetAssembly(typeof(ActionGroupManager)).GetName().Version.ToString(), Style.LabelExpandStyle);
+            VersionLogic();
 
-            if (versionNumber.isDone && ver == null)
-                ver = new System.Version(versionNumber.text.Substring(6, 7));
-
-            GUILayout.Label("AGM Last version : " + (ver == null ? "Checking ..." : ver.ToString()), Style.LabelExpandStyle);
-
-            if (ver != null && Assembly.GetAssembly(typeof(ActionGroupManager)).GetName().Version.CompareTo(ver) < 0)
-                if (GUILayout.Button("Update"))
-                    Application.OpenURL("http://forum.kerbalspaceprogram.com/threads/61263");
-
-            bool initial = SettingsManager.Settings.GetValue<bool>(SettingsManager.OrderByStage);
+            bool initial = SettingsManager.Instance.GetValue<bool>(SettingsManager.OrderByStage);
             bool final = GUILayout.Toggle(initial, "Order by stage", Style.ButtonToggleStyle);
             if (final != initial)
-                SettingsManager.Settings.SetValue(SettingsManager.OrderByStage, final);
+                SettingsManager.Instance.SetValue(SettingsManager.OrderByStage, final);
 
-            initial = SettingsManager.Settings.GetValue<bool>(SettingsManager.OrderByModules);
+            initial = SettingsManager.Instance.GetValue<bool>(SettingsManager.OrderByModules);
             final = GUILayout.Toggle(initial, "Group by Modules", Style.ButtonToggleStyle);
             if (final != initial)
-                SettingsManager.Settings.SetValue(SettingsManager.OrderByModules, final);
+                SettingsManager.Instance.SetValue(SettingsManager.OrderByModules, final);
 
             GUILayout.EndVertical();
 
             GUI.DragWindow();
         }
 
+        private void VersionLogic()
+        {
+            GUILayout.Label("AGM Current version : " + Assembly.GetAssembly(typeof(ActionGroupManager)).GetName().Version.ToString(), Style.LabelExpandStyle);             
+
+            string str = string.Empty;
+            if (versionNumber == null)
+                str = "Current.";
+            else if (!versionNumber.isDone)
+                str = "Checking ...";
+            else if (versionNumber.isDone && ver == null)
+            {
+                ver = new System.Version(versionNumber.text.Substring(6, 7));
+                SettingsManager.Instance.SetValue(SettingsManager.LastCheckedVersion, ver.ToString());
+                str = ver.ToString();
+            }
+
+            GUILayout.Label("AGM Last version : " + str, Style.LabelExpandStyle);
+
+            if (ver != null && Assembly.GetAssembly(typeof(ActionGroupManager)).GetName().Version.CompareTo(ver) < 0)
+                if (GUILayout.Button("Update"))
+                    Application.OpenURL("http://forum.kerbalspaceprogram.com/threads/61263");
+        }
+
         public override void Initialize(params object[] list)
         {
             settingsWindowPositon = new Rect(Screen.width / 2f - 100, Screen.height / 2f - 100, 200, 150);
-            versionNumber = new WWW("https://raw.github.com/SirJu/ActionGroupManager/master/VERSION");
-      
+
+            string version = SettingsManager.Instance.GetValue<string>(SettingsManager.LastCheckedVersion, string.Empty);
+            DateTime date = SettingsManager.Instance.GetValue<DateTime>(SettingsManager.LastCheckDate, DateTime.Today);
+            if (DateTime.Now > date.AddDays(1))
+            {
+                versionNumber = new WWW("https://raw.github.com/SirJu/ActionGroupManager/master/VERSION");
+                SettingsManager.Instance.SetValue(SettingsManager.LastCheckDate, DateTime.Today);
+            }
+            else
+            {
+                SettingsManager.Instance.SetValue(SettingsManager.LastCheckedVersion, Assembly.GetAssembly(typeof(ActionGroupManager)).GetName().Version.ToString());
+            }
         }
 
         public override void Terminate()
         {
-            SettingsManager.Settings.save();
+            SettingsManager.Instance.save();
         }
 
         public override void Reset()

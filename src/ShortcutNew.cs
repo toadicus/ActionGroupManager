@@ -27,7 +27,7 @@ namespace ActionGroupManager
                 controled = list[0] as UIObject;
             }
             mainButton = ToolbarManager.Instance.add("AGM", "AGMMainSwitch");
-            string str = SettingsManager.Settings.GetValue<bool>( SettingsManager.IsMainWindowVisible, true) ? 
+            string str = SettingsManager.Instance.GetValue<bool>( SettingsManager.IsMainWindowVisible, true) ? 
                 mainPath + onButton :
                 mainPath + offButton;
             mainButton.ToolTip = "Action Group Manager";
