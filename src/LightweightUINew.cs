@@ -567,6 +567,12 @@ namespace ActionGroupManager
 
         private void OnVesselChange(Vessel data)
         {
+            if (rootManager != null)
+            {
+                Part p = rootManager.part;
+                p.RemoveModule(rootManager);
+            }
+
             SetupRootModule();
         }
 
