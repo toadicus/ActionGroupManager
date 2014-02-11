@@ -47,6 +47,7 @@ local.properties
 [Rr]elease/
 x64/
 build/
+package/
 [Bb]in/
 [Oo]bj/
 
@@ -146,6 +147,7 @@ ClientBin/
 [Ss]tyle[Cc]op.*
 ~$*
 *~
+*.swp
 *.dbmdl
 *.[Pp]ublish.xml
 *.pfx
