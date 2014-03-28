@@ -40,9 +40,6 @@ namespace ActionGroupManager
         //the current action group selected
         KSPActionGroup currentSelectedActionGroup;
 
-        //the current text in search box
-        string currentSearch = string.Empty;
-
         //Inital window rect
         Rect mainWindowSize;
         Vector2 mainWindowScroll;

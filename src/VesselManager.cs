@@ -71,14 +71,13 @@ namespace ActionGroupManager
 #endif
         }
 
-        List<Part> nonSortedPartList;
         List<Part> ActiveVesselPartsList;
         public Vessel ActiveVessel { get; set; }
         public List<KSPActionGroup> AllActionGroups { get; set; }
 
         public event EventHandler DatabaseUpdated;
 
-        #region Initialization stuff
+#region Initialization stuff
 
         private void OnPartCouple(GameEvents.FromToAction<Part, Part> data)
         {
@@ -176,7 +175,6 @@ namespace ActionGroupManager
 
                     return false;
                 });
-            nonSortedPartList = new List<Part>(ActiveVessel.Parts);
 
             ActiveVesselPartsList.Sort(
                 (p1, p2) =>
@@ -192,13 +190,13 @@ namespace ActionGroupManager
 #endif
         }
 
-        #endregion
+#endregion
 
-        #region Request Methods for Parts listing
+#region Request Methods for Parts listing
         public IEnumerable<Part> GetParts()
         {
             return ActiveVesselPartsList;
         }
-        #endregion
+#endregion
     }
 }
