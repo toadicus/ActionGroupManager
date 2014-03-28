@@ -120,7 +120,6 @@ namespace ActionGroupManager
         public bool IsFolderVisible { get; set; }
         UIActionGroupManager currentFolder;
         public bool IsActionGroupsVisible { get; set; }
-        UIActionGroupManager currentActionGroup;
         public bool IsSymmetryModeVisible { get; set; }
 
         public UIPartManager(Part p)
@@ -276,7 +275,6 @@ namespace ActionGroupManager
                 IsSymmetryModeVisible = false;
 
                 currentFolder = null;
-                currentActionGroup = null;
             }
             else
             {
@@ -316,8 +314,6 @@ namespace ActionGroupManager
             {
                 if (!IsSymmetryModeVisible)
                 {
-                    currentActionGroup = obj;
-
                     actionGroupList.ForEach(
                         (e) =>
                         {
@@ -371,7 +367,6 @@ namespace ActionGroupManager
                         });
 
                     IsSymmetryModeVisible = false;
-                    currentActionGroup = null;
                 }
             }
             else
@@ -496,10 +491,14 @@ namespace ActionGroupManager
         Dictionary<Part, UIPartManager> cache;
         UIRootManager rootManager;
 
+		protected System.Diagnostics.Stopwatch reinitTimer;
+
         public override void Initialize(params object[] list)
         {
             cache = new Dictionary<Part, UIPartManager>();
             Active = false;
+
+			this.reinitTimer = new System.Diagnostics.Stopwatch();
 
             GameEvents.onPartActionUICreate.Add(new EventData<Part>.OnEvent(OnPartActionUICreate));
             GameEvents.onPartActionUIDismiss.Add(new EventData<Part>.OnEvent(OnPartActionUIDismiss));
@@ -516,46 +515,145 @@ namespace ActionGroupManager
 
         private void SetupRootModule()
         {
-            Debug.Log("AGM : Setup root !");
+			try
+			{
+				if (this.reinitTimer.IsRunning)
+				{
+					if (this.reinitTimer.ElapsedMilliseconds < 500)
+					{
+						Debug.Log("AGM: Not reinitializing because we've just done so.  This probably means we're crashing.");
+						return;
+					}
+					else
+					{
+						this.reinitTimer.Stop();
+						this.reinitTimer.Reset();
+					}
+				}
+				else
+				{
+					this.reinitTimer.Start();
+				}
 
-            if (!VesselManager.Instance.ActiveVessel.rootPart.Modules.Contains("UIRootManager"))
-            {
-                rootManager = VesselManager.Instance.ActiveVessel.rootPart.AddModule("UIRootManager") as UIRootManager;
-            }
-            else
-            {
-                foreach (PartModule item in VesselManager.Instance.ActiveVessel.rootPart.Modules)
-                {
-                    if (item is UIRootManager)
-                        rootManager = item as UIRootManager;
-                }
+	            Debug.Log("AGM : Setup root !");
 
-                rootManager.SwitchName();
-                this.Active = rootManager.enable;
-            }
+				if (VesselManager.Instance.ActiveVessel == null)
+				{
+					Debug.LogWarning("AGM: Cannot setup root: no ActiveVessel in VesselManager.");
+					return;
+				}
+
+				if (VesselManager.Instance.ActiveVessel.rootPart == null)
+				{
+					Debug.LogWarning("AGM: Cannot setup root: no root part.");
+					return;
+				}
+
+	            if (!VesselManager.Instance.ActiveVessel.rootPart.Modules.Contains("UIRootManager"))
+	            {
+#if DEBUG
+					Debug.Log("AGM: Adding UIRootManager to root part.");
+#endif
+	                rootManager = VesselManager.Instance.ActiveVessel.rootPart.AddModule("UIRootManager") as UIRootManager;
+	            }
+	            else
+	            {
+#if DEBUG
+					Debug.Log("AGM: Fetching UIRootManager from root part.");
+#endif
+	                foreach (PartModule item in VesselManager.Instance.ActiveVessel.rootPart.Modules)
+	                {
+	                    if (item is UIRootManager)
+	                        rootManager = item as UIRootManager;
+						break;
+	                }
+
+	                rootManager.SwitchName();
+	                this.Active = rootManager.enable;
+	            }
+
+#if DEBUG
+				Debug.Log("AGM: Got UIRootManager.");
+#endif
 
             //Case of docked vessel : Remove other Root manager
-            foreach (Part p in VesselManager.Instance.ActiveVessel.Parts)
-            {
-                if (p == VesselManager.Instance.ActiveVessel.rootPart)
-                    continue;
+				if (VesselManager.Instance.ActiveVessel.Parts == null)
+				{
+					Debug.LogWarning("AGM: Can't parse for existing rootManagers: parts list is null.");
+					return;
+				}
 
-                if (p.Modules.Contains("UIRootManager"))
-                {
-                    PartModule toRemove = null;
-                    foreach (PartModule mod in p.Modules)
-                    {
-                        if (mod is UIRootManager)
-                            toRemove = mod;
-                    }
+	            foreach (Part p in VesselManager.Instance.ActiveVessel.Parts)
+	            {
+#if DEBUG_VERBOSE
+					Debug.Log("AGM: parsing part " + p.partInfo.name);
+#endif
+	                if (p == VesselManager.Instance.ActiveVessel.rootPart)
+	                    continue;
 
-                    if (toRemove != null)
-                        p.RemoveModule(toRemove);
-                }
-            }
+					if (p.Modules == null)
+					{
+						Debug.LogWarning(
+							string.Format(
+								"AGM: Can't parse part '{0}' for rootManagers: modules list is null.",
+								p.partInfo.name
+							)
+						);
+						continue;
+					}
 
-            rootManager.Clicked += rootManager_Clicked;
-            rootManager.Events[UIRootManager.EVENTNAME].guiName = UIRootManager.GUIISOFF;
+	                if (p.Modules.Contains("UIRootManager"))
+	                {
+#if DEBUG_VERBOSE
+						Debug.Log("AGM: parsing modules in part " + p.partInfo.name);
+#endif
+	                    PartModule toRemove = null;
+	                    foreach (PartModule mod in p.Modules)
+	                    {
+#if DEBUG_VERBOSE
+							Debug.Log("AGM: parsing module " + mod.moduleName);
+#endif
+							if (mod is UIRootManager)
+							{
+								toRemove = mod;
+								break;
+							}
+	                    }
+
+	                    if (toRemove != null)
+	                        p.RemoveModule(toRemove);
+	                }
+				}
+
+				if (rootManager != null)
+				{
+#if DEBUG_VERBOSE
+					Debug.Log("AGM: adding _Clicked event to rootManager.");
+#endif
+					rootManager.Clicked += rootManager_Clicked;
+					if (rootManager.Events != null && rootManager.Events.Contains(UIRootManager.EVENTNAME))
+					{
+#if DEBUG_VERBOSE
+					Debug.Log("AGM: setting GUI text for rootManager KSPEvent.");
+#endif
+					rootManager.Events[UIRootManager.EVENTNAME].guiName = UIRootManager.GUIISOFF;
+					}
+				}
+				else
+				{
+					Debug.LogWarning("AGM: rootManger is null while setting up root.  This probably means it's been destroyed during exection.");
+				}
+#if DEBUG_VERBOSE
+				Debug.Log("AGM: SetupRoot done!");
+#endif
+			}
+			catch (Exception ex)
+			{
+				Debug.LogWarning("AGM: Caught Exception while parsing parts.  This probably means the part was destroyed during execution.");
+#if DEBUG_VERBOSE
+				Debug.LogException(ex);
+#endif
+			}
         }
 
 
